@@ -17,10 +17,18 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    let api = wiki::Wiki::new(&args.apikey);
-    let res = api.get_entries(&args.space, &args.project);
+    let api = wiki::Wiki::new(&args.space, &args.apikey);
+    let res = api.get_entries(&args.project);
     match res {
-        Ok(text) => println!("{:?}", text),
+        Ok(pages) => {
+            println!("{:?}", pages);
+            for page_info in pages {
+                match api.get_page(page_info.id) {
+                    Ok(page) => println!("{:?}", page),
+                    Err(e) => println!("{:?}", e),
+                }
+            }
+        }
         Err(e) => println!("{:?}", e),
     }
 }
