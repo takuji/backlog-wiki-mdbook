@@ -20,7 +20,7 @@ fn main() {
     let api = wiki::Wiki::new(&args.apikey);
     let res = api.get_entries(&args.space, &args.project);
     match res {
-        Ok(text) => println!("{}", text),
+        Ok(text) => println!("{:?}", text),
         Err(e) => println!("{:?}", e),
     }
 }
