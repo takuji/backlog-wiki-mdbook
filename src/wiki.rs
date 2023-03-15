@@ -47,8 +47,8 @@ pub struct PageInfo {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Page {
-    id: u64,
-    project_id: u64,
-    name: String,
-    content: String,
+    pub id: u64,
+    pub project_id: u64,
+    pub name: String,
+    pub content: String,
 }
