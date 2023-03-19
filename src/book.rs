@@ -13,11 +13,11 @@ impl Book {
         }
     }
 
-    pub fn init(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn init(&self, title: &str) -> Result<(), Box<dyn std::error::Error>> {
         fs::create_dir_all(&self.dir)?;
         let mut cfg = Config::default();
-        cfg.book.title = Some("My Book".to_string());
-        cfg.book.authors.push("Michael-F-Bryan".to_string());
+        cfg.book.title = Some(title.to_string());
+        // cfg.book.authors.push("Michael-F-Bryan".to_string());
 
         let mut builder = MDBook::init(&self.dir);
         builder.create_gitignore(true);

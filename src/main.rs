@@ -2,8 +2,8 @@ use std::{error, fs::File, io::Write, path::Path};
 
 use clap::Parser;
 
+mod api;
 mod book;
-mod wiki;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -24,15 +24,18 @@ struct Args {
 fn main() -> Result<(), Box<dyn error::Error>> {
     let args = Args::parse();
     let dir_path = Path::new(args.dir.as_str());
-    let book_dir = book::Book::new(dir_path.to_str().unwrap());
-    book_dir.init()?;
 
-    println!("{}", dir_path.to_str().unwrap());
-
-    let api = wiki::Wiki::new(&args.space, &args.apikey);
+    let api = api::new(&args.space, &args.apikey);
+    let project = api.get_project(&args.project)?;
     let pages = api.get_entries(&args.project)?;
 
     println!("{:?}", pages);
+
+    // create a mdbook directory
+    let book_dir = book::Book::new(dir_path.to_str().unwrap());
+    book_dir.init(project.name.as_str())?;
+
+    println!("{}", dir_path.to_str().unwrap());
 
     let src_dir = dir_path.join("src");
 

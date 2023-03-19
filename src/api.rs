@@ -1,16 +1,26 @@
 use serde::{Deserialize, Serialize};
 
-pub struct Wiki {
+pub struct BacklogApi {
     apikey: String,
     space: String,
 }
 
-impl Wiki {
-    pub fn new(space: &String, apikey: &String) -> Wiki {
-        Wiki {
-            space: space.clone(),
-            apikey: apikey.clone(),
-        }
+pub fn new(space: &String, apikey: &String) -> BacklogApi {
+    BacklogApi {
+        space: space.clone(),
+        apikey: apikey.clone(),
+    }
+}
+
+impl BacklogApi {
+    pub fn get_project(&self, key: &str) -> Result<Project, Box<dyn std::error::Error>> {
+        let url = format!(
+            "https://{}/api/v2/projects/{}?apiKey={}",
+            self.space, key, self.apikey,
+        );
+        let res = reqwest::blocking::get(url)?;
+        let json: Project = res.json()?;
+        Ok(json)
     }
 
     pub fn get_entries(
@@ -36,6 +46,14 @@ impl Wiki {
         let json: Page = res.json()?;
         Ok(json)
     }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Project {
+    pub id: u32,
+    pub project_key: String,
+    pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
