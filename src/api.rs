@@ -37,7 +37,7 @@ impl BacklogApi {
         Ok(json)
     }
 
-    pub fn get_page(&self, id: u64) -> Result<Page, Box<dyn std::error::Error>> {
+    pub fn get_page(&self, id: u32) -> Result<Page, Box<dyn std::error::Error>> {
         let url = format!(
             "https://{}/api/v2/wikis/{}?apiKey={}",
             self.space, id, self.apikey
@@ -54,18 +54,19 @@ pub struct Project {
     pub id: u32,
     pub project_key: String,
     pub name: String,
+    pub text_formatting_rule: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PageInfo {
-    pub id: u64,
+    pub id: u32,
     pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Page {
-    pub id: u64,
+    pub id: u32,
     pub project_id: u64,
     pub name: String,
     pub content: String,
