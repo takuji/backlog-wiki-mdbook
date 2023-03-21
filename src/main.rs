@@ -3,6 +3,7 @@ use std::{
     fs::{self, File},
     io::Write,
     path::Path,
+    process,
 };
 
 use api::PageInfo;
@@ -33,14 +34,18 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let api = api::new(&args.space, &args.apikey);
     let project = api.get_project(&args.project)?;
-    let pages = api.get_entries(&args.project)?;
 
-    println!("{:?}", pages);
+    if project.text_formatting_rule != "markdown" {
+        eprintln!(
+            "project {}'s text format rule is not 'markdown' ({}).",
+            project.project_key, project.text_formatting_rule
+        );
+        process::exit(1);
+    }
+    let pages = api.get_entries(&args.project)?;
 
     // create a mdbook directory
     book::create(dir_path.to_str().unwrap(), &project.name)?;
-
-    println!("{}", dir_path.to_str().unwrap());
 
     let src_dir = dir_path.join("src");
     // remove all .md files
@@ -59,7 +64,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     for page_info in pages {
         let page = api.get_page(page_info.id)?;
-        println!("{:?}", page);
+        println!("- {}", page.name);
         let file_path = src_dir.join(format!("{}.md", page.id));
         let mut file = File::create(file_path)?;
         file.write_all(page.content.as_bytes())?;
