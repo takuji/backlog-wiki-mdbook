@@ -67,11 +67,69 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
+struct Node {
+    id: Option<u32>,
+    name: String,
+    children: Vec<Node>,
+}
+
 fn build_summary(pages: &Vec<PageInfo>) -> String {
     let mut content = String::new();
     content.push_str("# SUMMARY\n\n");
+    let mut tree = Vec::<Node>::new();
     for page in pages {
-        content.push_str(format!("- [{}]({}.md)\n", page.name, page.id).as_str())
+        let components: Vec<&str> = page.name.split("/").collect();
+        build_tree(page, &mut tree, &components);
+    }
+    for node in &tree {
+        let s = render_node(node, 0);
+        content.push_str(&s);
     }
     content
+}
+
+fn render_node(node: &Node, level: usize) -> String {
+    let mut content = String::new();
+    if let Some(id) = node.id {
+        let s = format!("{}- [{}]({}.md)\n", "  ".repeat(level), node.name, id);
+        content.push_str(&s);
+    }
+    for child in &node.children {
+        let s = render_node(&child, level + 1);
+        content.push_str(&s);
+    }
+    content
+}
+
+fn build_tree(page: &PageInfo, tree: &mut Vec<Node>, components: &[&str]) {
+    if components.is_empty() {
+        return;
+    }
+    let is_leaf = components.len() == 1;
+    let el = components[0];
+    let node_opt = tree.iter_mut().find(|e| e.name == el);
+    if is_leaf {
+        match node_opt {
+            Some(node) => node.id = Some(page.id),
+            None => tree.push(Node {
+                id: Some(page.id),
+                name: page.name.to_string(),
+                children: Vec::new(),
+            }),
+        }
+    } else {
+        match node_opt {
+            Some(node) => build_tree(page, &mut node.children, &components[1..]),
+            None => {
+                let mut nodes = Vec::<Node>::new();
+                build_tree(page, &mut nodes, &components[1..]);
+                let node = Node {
+                    id: Some(page.id),
+                    name: page.name.to_string(),
+                    children: nodes,
+                };
+                tree.push(node);
+            }
+        };
+    }
 }
