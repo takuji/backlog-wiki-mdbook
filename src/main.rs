@@ -68,6 +68,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         let file_path = src_dir.join(format!("{}.md", page.id));
         let mut file = File::create(file_path)?;
         file.write_all(page.content.as_bytes())?;
+        let attachments = api.get_attachments(page_info.id)?;
+        for attachment in attachments {
+            println!("  - {:?}", attachment);
+        }
     }
     Ok(())
 }
