@@ -67,23 +67,21 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         println!("- {}", page.name);
         let file_path = src_dir.join(format!("{}.md", page.id));
         let mut file = File::create(file_path)?;
-        file.write_all(page.content.as_bytes())?;
+        let mut content = page.content.clone();
         let attachments = api.get_attachments(page_info.id)?;
+        let image_dir = src_dir.join(page.id.to_string());
+        fs::create_dir_all(image_dir.as_path())?;
+        api.download_all_attachments(&page, image_dir.to_str().unwrap())?;
         for attachment in attachments {
             let is_image = is_image_file_name(attachment.name.as_str());
             if !is_image {
                 continue;
             }
-            // download image to images directory
-            let image_dir = src_dir.join(attachment.id.to_string());
-            fs::create_dir_all(image_dir.as_path())?;
-            api.download_all_attachments(&page, image_dir.to_str().unwrap())?;
-            println!(
-                "  - {} {}",
-                attachment.name,
-                if is_image { "image" } else { "no image" }
-            );
+            let pattern = format!("![image][{}]", attachment.name);
+            let file_path = format!("![{}]({}/{})", attachment.name, page.id, attachment.name);
+            content = content.replace(&pattern, &file_path);
         }
+        file.write_all(content.as_bytes())?;
     }
     Ok(())
 }
