@@ -1,3 +1,5 @@
+use std::{fs::File, io::Write, path::Path};
+
 use serde::{Deserialize, Serialize};
 
 pub struct BacklogApi {
@@ -57,6 +59,48 @@ impl BacklogApi {
         let res = reqwest::blocking::get(url)?;
         let json: Vec<Attachment> = res.json()?;
         Ok(json)
+    }
+
+    /// Download all the attachments of a page
+    /// # Arguments
+    /// * `page` - a page
+    /// * `dir` - a directory to save attachments
+    /// # Returns
+    /// * `Vec<String>` - a list of file names
+    /// # Errors
+    /// * `std::io::Error` - if failed to create a file
+    /// * `reqwest::Error` - if failed to download a file
+    /// * `serde_json::Error` - if failed to parse a response
+    pub fn download_all_attachments(
+        &self,
+        page: &Page,
+        dir: &str,
+    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+        let mut file_names = Vec::new();
+        for attachment in &page.attachments {
+            let file_name = self.download_attachment(page.id, attachment, dir)?;
+            file_names.push(file_name);
+        }
+        Ok(file_names)
+    }
+
+    fn download_attachment(
+        &self,
+        page_id: u32,
+        attachment: &Attachment,
+        dir: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        // call https://<space>.backlog.com/api/v2/wikis/<id>/attachments/<id>
+        // and save the file to <dir>/<name>
+        let url = format!(
+            "https://{}/api/v2/wikis/{}/attachments/{}?apiKey={}",
+            self.space, page_id, attachment.id, self.apikey
+        );
+        let res = reqwest::blocking::get(url)?;
+        let file_path = Path::new(dir).join(&attachment.name);
+        let mut file = File::create(&file_path)?;
+        file.write_all(&res.bytes()?)?;
+        Ok(file_path.to_string_lossy().to_string())
     }
 }
 

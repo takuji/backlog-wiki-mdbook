@@ -70,7 +70,19 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         file.write_all(page.content.as_bytes())?;
         let attachments = api.get_attachments(page_info.id)?;
         for attachment in attachments {
-            println!("  - {:?}", attachment);
+            let is_image = is_image_file_name(attachment.name.as_str());
+            if !is_image {
+                continue;
+            }
+            // download image to images directory
+            let image_dir = src_dir.join(attachment.id.to_string());
+            fs::create_dir_all(image_dir.as_path())?;
+            api.download_all_attachments(&page, image_dir.to_str().unwrap())?;
+            println!(
+                "  - {} {}",
+                attachment.name,
+                if is_image { "image" } else { "no image" }
+            );
         }
     }
     Ok(())
@@ -140,5 +152,14 @@ fn build_tree(page: &PageInfo, tree: &mut Vec<Node>, components: &[&str]) {
                 tree.push(node);
             }
         };
+    }
+}
+
+// Check if a string is an image file name
+fn is_image_file_name(file_name: &str) -> bool {
+    let ext = Path::new(file_name).extension().unwrap();
+    match ext.to_str().unwrap() {
+        "png" | "jpg" | "jpeg" | "gif" | "svg" => true,
+        _ => false,
     }
 }
