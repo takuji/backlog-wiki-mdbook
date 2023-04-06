@@ -69,17 +69,19 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         let mut file = File::create(file_path)?;
         let mut content = page.content.clone();
         let attachments = api.get_attachments(page_info.id)?;
-        let image_dir = src_dir.join(page.id.to_string());
-        fs::create_dir_all(image_dir.as_path())?;
-        api.download_all_attachments(&page, image_dir.to_str().unwrap())?;
-        for attachment in attachments {
-            let is_image = is_image_file_name(attachment.name.as_str());
-            if !is_image {
-                continue;
+        if attachments.len() > 0 {
+            let image_dir = src_dir.join(page.id.to_string());
+            fs::create_dir_all(image_dir.as_path())?;
+            api.download_all_attachments(&page, image_dir.to_str().unwrap())?;
+            for attachment in attachments {
+                let is_image = is_image_file_name(attachment.name.as_str());
+                if !is_image {
+                    continue;
+                }
+                let pattern = format!("![image][{}]", attachment.name);
+                let file_path = format!("![{}]({}/{})", attachment.name, page.id, attachment.name);
+                content = content.replace(&pattern, &file_path);
             }
-            let pattern = format!("![image][{}]", attachment.name);
-            let file_path = format!("![{}]({}/{})", attachment.name, page.id, attachment.name);
-            content = content.replace(&pattern, &file_path);
         }
         file.write_all(content.as_bytes())?;
     }
@@ -98,7 +100,7 @@ fn build_summary(pages: &Vec<PageInfo>) -> String {
     let mut tree = Vec::<Node>::new();
     for page in pages {
         let components: Vec<&str> = page.name.split("/").collect();
-        build_tree(page, &mut tree, &components);
+        build_tree(&mut tree, page, &components);
     }
     for node in &tree {
         let s = render_node(node, 0);
@@ -109,10 +111,15 @@ fn build_summary(pages: &Vec<PageInfo>) -> String {
 
 fn render_node(node: &Node, level: usize) -> String {
     let mut content = String::new();
-    if let Some(id) = node.id {
-        let s = format!("{}- [{}]({}.md)\n", "  ".repeat(level), node.name, id);
-        content.push_str(&s);
-    }
+    let s = match node.id {
+        Some(id) => {
+            format!("{}- [{}]({}.md)\n", "  ".repeat(level), node.name, id)
+        }
+        None => {
+            format!("{}- [{}]()\n", "  ".repeat(level), node.name)
+        }
+    };
+    content.push_str(&s);
     for child in &node.children {
         let s = render_node(&child, level + 1);
         content.push_str(&s);
@@ -120,7 +127,12 @@ fn render_node(node: &Node, level: usize) -> String {
     content
 }
 
-fn build_tree(page: &PageInfo, tree: &mut Vec<Node>, components: &[&str]) {
+/// Build a tree from a page name
+/// e.g. "foo/bar/baz" ->
+/// foo:
+///     bar:
+///         baz: "bazbaz"
+fn build_tree(tree: &mut Vec<Node>, page: &PageInfo, components: &[&str]) {
     if components.is_empty() {
         return;
     }
@@ -132,19 +144,24 @@ fn build_tree(page: &PageInfo, tree: &mut Vec<Node>, components: &[&str]) {
             Some(node) => node.id = Some(page.id),
             None => tree.push(Node {
                 id: Some(page.id),
-                name: page.name.to_string(),
+                name: el.to_string(),
                 children: Vec::new(),
             }),
         }
     } else {
+        // node has children
         match node_opt {
-            Some(node) => build_tree(page, &mut node.children, &components[1..]),
+            Some(node) => {
+                // node is already in the tree
+                build_tree(&mut node.children, page, &components[1..])
+            }
             None => {
+                // node is not in the tree. build children first.
                 let mut nodes = Vec::<Node>::new();
-                build_tree(page, &mut nodes, &components[1..]);
+                build_tree(&mut nodes, page, &components[1..]);
                 let node = Node {
-                    id: Some(page.id),
-                    name: page.name.to_string(),
+                    id: None,
+                    name: el.to_string(),
                     children: nodes,
                 };
                 tree.push(node);
