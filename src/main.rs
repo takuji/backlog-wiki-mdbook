@@ -33,7 +33,7 @@ struct Args {
     #[arg(long)]
     dir: String,
 
-    /// Build the book after creating it
+    /// Build the book after creating an mdBook directory
     #[arg(long, default_value = "false")]
     build: bool,
 }

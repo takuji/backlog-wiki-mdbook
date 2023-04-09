@@ -1,6 +1,6 @@
 # backlog-wiki-mdbook
 
-Creates an mdbook project from Backlog's wiki pages.
+A command line tool to create an [mdBook](https://rust-lang.github.io/mdBook/) project from wiki pages of a Backlog project.
 
 ## How to use
 
@@ -15,7 +15,7 @@ backlog-wiki-mdbook --apikey=xxxxxxxxxx --domain=(SPACE_DOMAIN) --project=(PROJE
       --domain <DOMAIN>    Domain of your space (e.g. example.backlog.com)
       --project <PROJECT>  Project key (e.g. EXAMPLE)
       --dir <DIR>          Directory to create the book in
-      --build              Build the book after creating it
+      --build              Build the book after creating an mdBook directory
   -h, --help               Print help
   -V, --version            Print version
 ```
