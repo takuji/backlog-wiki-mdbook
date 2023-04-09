@@ -2,6 +2,8 @@
 
 A command line tool to create an [mdBook](https://rust-lang.github.io/mdBook/) project from wiki pages of a Backlog project.
 
+This only works for the projects where "Markdown" is used for the text formatting rule.
+
 ## How to use
 
 ```
