@@ -12,24 +12,34 @@ use clap::Parser;
 mod api;
 mod book;
 
+const VALID_DOMAIN_BASES: [&str; 2] = [".backlog.com", ".backlog.jp"];
+
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long)]
+    /// API key
+    #[arg(long)]
     apikey: String,
 
-    #[arg(short, long)]
+    /// Domain of your space (e.g. example.backlog.com)
+    #[arg(long)]
     domain: String,
 
-    #[arg(short, long)]
+    /// Project key (e.g. EXAMPLE)
+    #[arg(long)]
     project: String,
 
-    #[arg(short, long)]
+    /// Directory to create the book in
+    #[arg(long)]
     dir: String,
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let args = Args::parse();
+    if !is_valid_domain(&args.domain) {
+        eprintln!("invalid Backlog domain: {}", args.domain);
+        process::exit(1);
+    }
     let dir_path = Path::new(args.dir.as_str());
 
     let api = api::new(&args.domain, &args.apikey);
@@ -86,6 +96,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         file.write_all(content.as_bytes())?;
     }
     Ok(())
+}
+
+/// Returns true if the string is a valid Backlog domain
+/// (e.g. example.backlog.com)
+fn is_valid_domain(s: &str) -> bool {
+    return VALID_DOMAIN_BASES.iter().any(|&d| s.ends_with(d));
 }
 
 struct Node {
