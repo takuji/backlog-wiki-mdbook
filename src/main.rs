@@ -19,7 +19,7 @@ struct Args {
     apikey: String,
 
     #[arg(short, long)]
-    space: String,
+    domain: String,
 
     #[arg(short, long)]
     project: String,
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let args = Args::parse();
     let dir_path = Path::new(args.dir.as_str());
 
-    let api = api::new(&args.space, &args.apikey);
+    let api = api::new(&args.domain, &args.apikey);
     let project = api.get_project(&args.project)?;
 
     if project.text_formatting_rule != "markdown" {
