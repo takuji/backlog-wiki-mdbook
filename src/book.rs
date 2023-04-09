@@ -47,3 +47,9 @@ fn init(dir: &str, title: &str) -> Result<(), BookError> {
     builder.build()?;
     Ok(())
 }
+
+pub fn build(dir: &str) -> Result<(), BookError> {
+    let book = MDBook::load(&dir)?;
+    book.build()?;
+    Ok(())
+}

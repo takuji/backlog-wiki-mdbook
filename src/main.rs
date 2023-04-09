@@ -32,6 +32,10 @@ struct Args {
     /// Directory to create the book in
     #[arg(long)]
     dir: String,
+
+    /// Build the book after creating it
+    #[arg(long, default_value = "false")]
+    build: bool,
 }
 
 fn main() -> Result<(), Box<dyn error::Error>> {
@@ -95,6 +99,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         }
         file.write_all(content.as_bytes())?;
     }
+
+    if args.build {
+        book::build(dir_path.to_str().unwrap())?;
+    }
+
     Ok(())
 }
 
