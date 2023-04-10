@@ -1,6 +1,6 @@
 # backlog-wiki-mdbook
 
-A command line tool to create an [mdBook](https://rust-lang.github.io/mdBook/) project from wiki pages of a Backlog project.
+A command line tool to create an [mdBook](https://rust-lang.github.io/mdBook/) project from wiki pages of a [Backlog](https://backlog.com/) project.
 
 This only works for the projects where "Markdown" is used for the text formatting rule.
 
